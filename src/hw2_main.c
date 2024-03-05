@@ -325,7 +325,6 @@ void paste_pixels(unsigned int *paste_info, unsigned int paste_height, unsigned 
 				current_col++;
 			}
 		}
-		//printf("10\n");
 				//printf("%u\n", new_colors);
 
 			fclose(file);
@@ -375,7 +374,69 @@ void paste_pixels(unsigned int *paste_info, unsigned int paste_height, unsigned 
 			}
 		fclose(file);
 		file = fopen(file_name, "r");
-	}	
+    }else{
+		unsigned int width, height, colorstream;
+		char s[10] = "";
+		fscanf(file, "%s", s);
+		fscanf(file, "%u", &width);
+		fscanf(file, "%u", &height);
+		fscanf(file, "%u", &colorstream);
+		unsigned int color_table[width * height][3], counter = 0;
+		unsigned int r = 0,g = 0,b = 0;
+		unsigned int image_pixels[height][width], x_counter = 0, y_counter = 0;
+		fscanf(file, "%u %u %u", &r,&g,&b);
+		color_table[0][0] = r;
+		color_table[0][1] = g;
+		color_table[0][2] = b;
+		counter++;
+		image_pixels[0][0] = 0;
+		y_counter++;
+		printf("100\n");
+		while(fscanf(file, "%u %u %u", &r,&g,&b) > 0){
+			unsigned int pixel_number = -1;
+			int index_found = 0;
+			
+			for (unsigned int i = 0; i < counter; i++){
+				if (r == color_table[i][0] && g == color_table[i][1] && b == color_table[i][2])
+				{
+					pixel_number = i;
+					index_found = 1;
+				}
+			}
+			if(index_found == 0){
+				color_table[counter][0] = r;
+				color_table[counter][1] = g;
+				color_table[counter][2] = b;
+				pixel_number = counter;
+				counter++;
+			}
+			if (y_counter == width){
+				y_counter = 0;
+				x_counter++;
+			}
+			if (x_counter >= row && x_counter < row + paste_height && y_counter >= col && y_counter < col + paste_width){
+				image_pixels[x_counter][y_counter] = *pixels++;
+			}else{
+				image_pixels[x_counter][y_counter] = pixel_number;
+			}
+			y_counter++;
+		}
+		    fclose(file);
+			file = fopen(file_name, "w");
+			fprintf(file, "%s\n", "P3");
+			fprintf(file, "%u ", width);
+			fprintf(file, "%u\n", height);
+			fprintf(file, "%u\n", colorstream);
+			unsigned int *image_pixel = &image_pixels[0][0];
+			for (unsigned int i = 0; i < height; i++){
+				for (unsigned int j = 0; j < width; j++){
+					fprintf(file, "%u %u %u ", color_table[*image_pixel][0], color_table[*image_pixel][1], color_table[*image_pixel][2]);
+					image_pixel++;
+				}
+			}
+		fclose(file);
+		file = fopen(file_name, "r");
+	}		
 }
 int main(int argc, char **argv) {
 	/*for (int i = 0; i < argc; i++){
